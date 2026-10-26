@@ -1,11 +1,8 @@
-"""Read live inverter state from Home Assistant Supervisor API.
+"""Read live inverter state from Home Assistant REST API.
 
-Inside an HA add-on the Supervisor provides:
-  - base URL  http://supervisor/core
-  - token     $SUPERVISOR_TOKEN  (injected automatically by HA, no config needed)
-
-This replaces the Mac solarstack-ha-push/push_house.py entirely — the add-on reads
-the inverter entities directly without any external pusher.
+Works in two modes:
+  - Inside an HA Supervisor add-on: uses $SUPERVISOR_TOKEN + http://supervisor/core/api
+  - Standalone Docker container:    uses $HA_TOKEN + $HA_URL (e.g. http://192.168.2.10:8123)
 """
 from __future__ import annotations
 
@@ -17,8 +14,23 @@ import requests
 
 log = logging.getLogger("ha_reader")
 
-_BASE = "http://supervisor/core/api"
-_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
+_SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
+_HA_TOKEN = os.environ.get("HA_TOKEN", "")
+_HA_URL = os.environ.get("HA_URL", "http://192.168.2.10:8123")
+
+if _SUPERVISOR_TOKEN:
+    _BASE = "http://supervisor/core/api"
+    _TOKEN = _SUPERVISOR_TOKEN
+    log.info("Using HA Supervisor API")
+elif _HA_TOKEN:
+    _BASE = f"{_HA_URL.rstrip('/')}/api"
+    _TOKEN = _HA_TOKEN
+    log.info("Using HA REST API at %s", _HA_URL)
+else:
+    _BASE = f"{_HA_URL.rstrip('/')}/api"
+    _TOKEN = ""
+    log.warning("No HA token set — entity reads will fail")
+
 _HEADERS = {"Authorization": f"Bearer {_TOKEN}", "Content-Type": "application/json"}
 
 # Cache: entity_id -> (value, timestamp)
@@ -54,7 +66,7 @@ def _float(entity_id: str, default: float = 0.0) -> float:
 def read_live(cfg: dict) -> dict | None:
     """Return a live block from HA entities, or None if unavailable."""
     if not _TOKEN:
-        log.warning("SUPERVISOR_TOKEN not set — running outside HA?")
+        log.warning("No HA token set (set HA_TOKEN env var) — entity reads disabled")
         return None
 
     soc = _float(cfg.get("entity_soc", "sensor.fox_battery_soc"))

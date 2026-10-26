@@ -1,0 +1,16 @@
+services:
+  ian-solar-stack:
+    build:
+      context: .
+      args:
+        BUILD_FROM: python:3.11-alpine
+    container_name: ian-solar-stack
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - HA_URL=http://192.168.2.10:8123
+      - TZ=Europe/London
+    volumes:
+      - ./data:/data

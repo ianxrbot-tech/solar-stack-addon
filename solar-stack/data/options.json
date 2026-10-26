@@ -1,0 +1,20 @@
+{
+  "battery_kwh": 10.0,
+  "battery_min_soc": 10,
+  "battery_max_soc": 100,
+  "max_charge_kw": 3.6,
+  "max_discharge_kw": 3.6,
+  "wear_cost_p": 5.0,
+  "tariff": "go",
+  "go_cheap_start": "00:00",
+  "go_cheap_end": "05:00",
+  "go_cheap_rate_p": 9.0,
+  "go_day_rate_p": 24.0,
+  "export_tariff": "agile_outgoing",
+  "gsp_region": "K",
+  "entity_soc": "sensor.fox_battery_soc",
+  "entity_solar_kw": "sensor.fox_solar_total",
+  "entity_battery_kw": "sensor.fox_battery_power",
+  "entity_grid_kw": "sensor.fox_grid_import",
+  "entity_house_kw": "sensor.fox_load_power"
+}
