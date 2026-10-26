@@ -1,0 +1,62 @@
+name: Solar Stack
+version: "0.1.0"
+slug: solar_stack
+description: Smart battery scheduling — explains your plan, optimises for your tariff.
+url: https://thesolarstack.co.uk
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+
+# Options shown in HA add-on config UI
+options:
+  battery_kwh: 10.0
+  battery_min_soc: 10
+  battery_max_soc: 100
+  max_charge_kw: 3.6
+  max_discharge_kw: 3.6
+  wear_cost_p: 5.0
+  tariff: "go"
+  go_cheap_start: "00:00"
+  go_cheap_end: "05:00"
+  go_cheap_rate_p: 9.0
+  go_day_rate_p: 24.0
+  export_tariff: "agile_outgoing"
+  gsp_region: "K"
+  # Entity IDs for your inverter in HA — defaults cover Fox ESS via foxess_api
+  entity_soc: "sensor.fox_battery_soc"
+  entity_solar_kw: "sensor.fox_solar_total"
+  entity_battery_kw: "sensor.fox_battery_power"
+  entity_grid_kw: "sensor.fox_grid_import"
+  entity_house_kw: "sensor.fox_load_power"
+
+schema:
+  battery_kwh: float
+  battery_min_soc: int
+  battery_max_soc: int
+  max_charge_kw: float
+  max_discharge_kw: float
+  wear_cost_p: float
+  tariff: "go|agile"
+  go_cheap_start: str
+  go_cheap_end: str
+  go_cheap_rate_p: float
+  go_day_rate_p: float
+  export_tariff: "agile_outgoing|fixed"
+  gsp_region: str
+  entity_soc: str
+  entity_solar_kw: str
+  entity_battery_kw: str
+  entity_grid_kw: str
+  entity_house_kw: str
+
+ports:
+  8791/tcp: 8791
+ports_description:
+  8791/tcp: "Solar Stack API + app (ball device + browser)"
+
+map:
+  - config:rw
+
+homeassistant_api: true

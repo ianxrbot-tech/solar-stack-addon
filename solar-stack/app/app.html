@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05080c">
+<title>The Solar Stack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+  :root{ --teal:#00c4b4; --orange:#f26722; --bg:#05080c; --card:#0e151d; --line:#1b2530;
+         --ink:#e9eef2; --dim:#8b98a5; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:radial-gradient(120% 55% at 50% 0%, #0d1720 0%, var(--bg) 58%);
+       color:var(--ink); font-family:'Manrope',system-ui,sans-serif; min-height:100vh;}
+  .disp{font-family:'Space Grotesk',system-ui,sans-serif;}
+  .wrap{padding:calc(env(safe-area-inset-top) + 18px) 18px 108px; max-width:460px; margin:0 auto;}
+  header{display:flex; align-items:center; gap:11px; margin-bottom:20px;}
+  header .name{font-family:'Space Grotesk'; font-weight:700; font-size:17px; flex:1;}
+  .live{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#0a7d72;
+        background:rgba(0,196,180,.12); padding:5px 10px; border-radius:999px;}
+  .live .d{width:7px;height:7px;border-radius:50%;background:var(--teal);}
+  section{display:none;} section.on{display:block;}
+  /* home */
+  .ring-wrap{position:relative; width:244px; height:244px; margin:4px auto 2px;}
+  .ring-wrap svg{position:absolute; inset:0;}
+  .ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .soc{font-family:'Space Grotesk'; font-size:54px; font-weight:700; line-height:1;}
+  .soc small{font-size:20px; color:var(--dim);}
+  .soc-lbl{font-size:11px; letter-spacing:.26em; color:var(--dim); font-weight:700; margin-top:4px;}
+  .status{text-align:center; font-size:15px; font-weight:600; margin:6px 0 20px; min-height:22px;}
+  .status b{color:var(--teal);}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px;}
+  .card .lbl{display:flex; align-items:center; gap:7px; color:var(--dim); font-size:12px; font-weight:600;}
+  .card .val{font-family:'Space Grotesk'; font-size:25px; font-weight:700; margin-top:8px;}
+  .card .val small{font-size:13px; color:var(--dim); font-weight:600;}
+  .pv .val{color:var(--orange);} .bat .val{color:var(--teal);}
+  .strip{display:flex; gap:11px; margin-top:11px;}
+  .strip .card{flex:1; text-align:center;} .strip .val{font-size:19px;}
+  .why{margin-top:11px; display:flex; gap:13px; align-items:flex-start;}
+  .why .t{font-size:13px; line-height:1.5; color:#aeb9c2;}
+  .why .t b{color:var(--ink);}
+  /* savings */
+  .hero{background:radial-gradient(120% 100% at 80% 0%,#16222d,#0c141c); border:1px solid var(--line);
+        border-radius:22px; padding:24px; text-align:center; margin-bottom:14px;}
+  .hero .k{font-size:11px; letter-spacing:.16em; color:var(--dim); font-weight:700;}
+  .hero .big{font-family:'Space Grotesk'; font-size:52px; font-weight:700; line-height:1; margin:6px 0 4px;}
+  .hero .big span{color:var(--orange);}
+  .hero .sub{font-size:13px; color:var(--dim);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .stat .val{font-family:'Space Grotesk'; font-size:22px; font-weight:700; margin-top:6px;}
+  .credit{color:var(--teal);}
+  h3{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); font-weight:700; margin:20px 4px 10px;}
+  /* history */
+  .seg{display:flex; gap:8px; margin:0 0 12px;}
+  .seg button{flex:1; background:var(--card); border:1px solid var(--line); color:var(--dim);
+      border-radius:10px; padding:8px; font:600 13px 'Manrope'; }
+  .seg button.on{color:var(--ink); border-color:var(--teal);}
+  canvas{width:100%; height:240px; display:block;}
+  .legend{display:flex; gap:16px; justify-content:center; font-size:12px; color:var(--dim); margin-top:12px;}
+  .legend b{display:inline-block; width:10px;height:10px;border-radius:3px; margin-right:5px; vertical-align:middle;}
+  .err{color:var(--orange); text-align:center; font-size:13px; margin-top:10px;}
+  footer{text-align:center; color:var(--dim); font-size:11px; margin-top:20px; line-height:1.5;}
+  /* tab bar */
+  .tabs{position:fixed; left:0; right:0; bottom:0; background:#0a1017; border-top:1px solid var(--line);
+        display:grid; grid-template-columns:repeat(5,1fr); padding:10px 4px calc(env(safe-area-inset-bottom) + 12px); max-width:460px; margin:0 auto;}
+  .tcard{display:flex; align-items:center; gap:12px; padding:15px; margin-bottom:10px; background:var(--card); border:1px solid var(--line); border-radius:16px;}
+  .tcard.best{border-color:var(--teal); background:rgba(0,196,180,.06);}
+  .tcard.cur{border-color:#39424d;}
+  .tcard .nm{flex:1;} .tcard .nm b{font-weight:700; font-size:15px;} .tcard .nm .sm{font-size:12px; color:var(--dim);}
+  .tcard .amt{font-family:'Space Grotesk'; font-weight:700; font-size:18px; text-align:right;}
+  .tcard .amt .save{display:block; font:600 12px 'Manrope'; margin-top:2px;}
+  .save.pos{color:var(--teal);} .save.neg{color:#8b98a5;}
+  .badge{font:700 10px 'Manrope'; letter-spacing:.04em; padding:3px 8px; border-radius:999px;}
+  .badge.you{background:#2a333d; color:#cdd6df;} .badge.best{background:rgba(0,196,180,.15); color:var(--teal);}
+  .qtoggle{display:flex; gap:8px;} .qtoggle button{flex:1; background:#0a1017; border:1px solid var(--line); color:var(--dim);
+       border-radius:10px; padding:9px; font:700 13px 'Manrope';} .qtoggle button.on{color:var(--ink); border-color:var(--teal); background:rgba(0,196,180,.08);}
+  .chips{display:flex; gap:8px; justify-content:center; margin-top:12px;}
+  .chips button{background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--dim); border-radius:999px; padding:6px 14px; font:600 12px 'Manrope';}
+  .chips button.on{color:var(--ink); border-color:var(--orange);}
+  .planrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .pill{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 11px; font-size:12px; color:var(--dim);}
+  .pill b{color:var(--ink); font-weight:700;}
+  .slot{display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--line);}
+  .slot:last-child{border-bottom:none;}
+  .slot .st{font-family:'Space Grotesk'; font-weight:600; font-size:14px; width:46px;}
+  .slot .sp{flex:1; font-size:13px; color:var(--dim);}
+  .slot .sa{font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px;}
+  .a-free,.a-charge{background:rgba(0,196,180,.18); color:var(--teal);}
+  .a-cheap{background:rgba(0,196,180,.08); color:#4fd6c6;}
+  .a-export,.a-peak{background:rgba(242,103,34,.16); color:#f2a05a;}
+  .a-hold{background:#20262e; color:#8b98a5;}
+  .tabs button{background:none; border:none; color:#5b6672; display:flex; flex-direction:column; align-items:center; gap:4px; font:700 11px 'Manrope';}
+  .tabs button.on{color:var(--ink);}
+  .tabs svg{width:23px;height:23px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 120 120" width="34" height="34" fill="none">
+      <defs><linearGradient id="mk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00c4b4"/><stop offset="1" stop-color="#f26722"/></linearGradient></defs>
+      <circle cx="60" cy="60" r="50" stroke="url(#mk)" stroke-width="8" stroke-linecap="round" stroke-dasharray="232 82" transform="rotate(131 60 60)"/>
+      <rect x="44" y="49" width="32" height="9" rx="4.5" fill="#f26722"/><rect x="39" y="62" width="42" height="9" rx="4.5" fill="#12b39b"/><rect x="34" y="75" width="52" height="9" rx="4.5" fill="#00c4b4"/>
+    </svg>
+    <span class="name" id="title">Solar Stack</span>
+    <span class="live"><span class="d"></span>Live</span>
+  </header>
+
+  <!-- HOME -->
+  <section id="v-home" class="on">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 244 244">
+        <defs><linearGradient id="rg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00c4b4"/><stop offset="1" stop-color="#f26722"/></linearGradient></defs>
+        <circle cx="122" cy="122" r="104" fill="none" stroke="#161d25" stroke-width="14"/>
+        <circle id="socArc" cx="122" cy="122" r="104" fill="none" stroke="url(#rg)" stroke-width="14"
+                stroke-linecap="round" stroke-dasharray="0 654" transform="rotate(-90 122 122)"/>
+      </svg>
+      <div class="ring-center"><div class="soc"><span id="socNum">–</span><small>%</small></div><div class="soc-lbl">BATTERY</div></div>
+    </div>
+    <div class="status" id="status">Connecting…</div>
+    <div class="grid">
+      <div class="card pv"><div class="lbl">☀ Solar now</div><div class="val"><span id="pv">–</span> <small>kW</small></div></div>
+      <div class="card bat"><div class="lbl">🔋 Battery</div><div class="val"><span id="bat">–</span> <small>kW</small></div></div>
+      <div class="card"><div class="lbl">⚡ Grid</div><div class="val"><span id="grid">–</span> <small>kW</small></div></div>
+      <div class="card"><div class="lbl">🏠 Home</div><div class="val"><span id="load">–</span> <small>kW</small></div></div>
+    </div>
+    <div class="strip">
+      <div class="card"><div class="lbl">Generated today</div><div class="val" style="color:var(--orange)"><span id="today">–</span> <small>kWh</small></div></div>
+      <div class="card"><div class="lbl">Battery size</div><div class="val"><span id="cap">–</span> <small>kWh</small></div></div>
+    </div>
+    <div class="card why">
+      <svg viewBox="0 0 120 120" width="30" height="30" fill="none" style="flex-shrink:0">
+        <circle cx="60" cy="60" r="50" stroke="url(#mk)" stroke-width="9" stroke-linecap="round" stroke-dasharray="232 82" transform="rotate(131 60 60)"/>
+        <rect x="44" y="49" width="32" height="9" rx="4.5" fill="#f26722"/><rect x="39" y="62" width="42" height="9" rx="4.5" fill="#12b39b"/><rect x="34" y="75" width="52" height="9" rx="4.5" fill="#00c4b4"/>
+      </svg>
+      <div class="t"><b>Why</b><br><span id="why">–</span></div>
+    </div>
+  </section>
+
+  <!-- SAVINGS -->
+  <section id="v-savings">
+    <div class="hero">
+      <div class="k">SMART TIMING HAS SAVED YOU</div>
+      <div class="big"><span>£</span><span id="s-total">–</span></div>
+      <div class="sub">by charging cheap &amp; avoiding peak — vs the same battery left on plain self-use</div>
+    </div>
+    <div class="row2">
+      <div class="card stat"><div class="lbl">Saved yesterday</div><div class="val" style="color:var(--teal)">£<span id="s-yest">–</span></div></div>
+      <div class="card stat"><div class="lbl">Today so far</div><div class="val" id="s-today">–</div></div>
+    </div>
+    <h3>Right now</h3>
+    <div class="row2">
+      <div class="card stat"><div class="lbl">Import rate</div><div class="val"><span id="s-imp">–</span><small style="font-size:13px;color:var(--dim)">p</small></div></div>
+      <div class="card stat"><div class="lbl">Export rate</div><div class="val"><span id="s-exp">–</span><small style="font-size:13px;color:var(--dim)">p</small></div></div>
+    </div>
+    <h3>Your solar + battery overall</h3>
+    <div class="card stat"><div class="lbl">Saved vs having neither</div><div class="val" style="color:var(--orange)">£<span id="s-pvbat">–</span></div></div>
+    <div class="err" id="s-err"></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="v-history">
+    <div class="seg">
+      <button data-h="24" class="on">24 hours</button>
+      <button data-h="72">3 days</button>
+    </div>
+    <div class="card"><canvas id="chart"></canvas>
+      <div class="legend"><span><b style="background:var(--teal)"></b>Battery %</span><span><b style="background:var(--orange)"></b>Solar kW</span></div>
+    </div>
+    <div class="err" id="h-err"></div>
+  </section>
+
+  <!-- PLAN / EV -->
+  <section id="v-plan">
+    <div class="card">
+      <div class="lbl" style="margin-bottom:10px">🚗 Charging your car tonight?</div>
+      <div class="qtoggle">
+        <button id="ev-yes" class="on">Yes, tonight</button>
+        <button id="ev-no">Not tonight</button>
+      </div>
+    </div>
+    <div id="ev-block">
+      <div class="hero" style="margin-top:12px">
+        <div class="k">CHEAPEST TIME TO CHARGE</div>
+        <div class="big" id="ev-window" style="font-size:40px">–</div>
+        <div class="sub" id="ev-avg">–</div>
+        <div class="chips">
+          <button id="ev-full" class="on">Full charge · 4h</button>
+          <button id="ev-topup">Quick top-up · 1½h</button>
+        </div>
+      </div>
+    </div>
+    <h3>Rates ahead · next 24h</h3>
+    <div class="card">
+      <canvas id="fchart"></canvas>
+      <div class="legend"><span><b style="background:var(--teal)"></b>Cheap charge window</span><span><b style="background:var(--orange)"></b>Price p/kWh</span></div>
+    </div>
+    <div class="planrow" id="planrow"></div>
+    <h3>The plan · slot by slot · next 12h</h3>
+    <div class="card" style="padding:2px 0"><div id="slotlist"></div></div>
+    <div class="err" id="p-err"></div>
+  </section>
+
+  <!-- COMPARE -->
+  <section id="v-compare">
+    <div class="card">
+      <div class="lbl" style="margin-bottom:10px">Do you charge an electric car?</div>
+      <div class="qtoggle">
+        <button id="cev-yes" class="on">Yes</button>
+        <button id="cev-no">No</button>
+      </div>
+    </div>
+    <div class="hero" style="margin-top:12px; padding:20px">
+      <div class="k">OUR RECOMMENDATION</div>
+      <div class="big" id="c-save" style="font-size:40px">–</div>
+      <div class="sub" id="c-best">–</div>
+    </div>
+    <h3>Every tariff, ranked for you</h3>
+    <div id="c-list"></div>
+    <div class="sub" id="c-note" style="text-align:center; margin-top:10px; font-size:12px"></div>
+    <div class="err" id="c-err"></div>
+  </section>
+
+  <footer>Reading your Fox live via Home Assistant · <span id="upd">–</span><br>The Solar Stack — live trial</footer>
+</div>
+
+<nav class="tabs">
+  <button data-v="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v8h12v-8"/></svg>Home</button>
+  <button data-v="savings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Savings</button>
+  <button data-v="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l1-3h7l1 3"/><circle cx="8" cy="18" r="1.4"/><circle cx="16" cy="18" r="1.4"/></svg>Plan</button>
+  <button data-v="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v18M15 3v18M4 8h5M4 14h5M15 6h5M15 12h5"/></svg>Compare</button>
+  <button data-v="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 15l5-5 4 3 7-8"/></svg>History</button>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+function n(v){return (v==null)?'–':(Math.abs(v)<0.05?'0.0':v.toFixed(2));}
+let histHours=24, histLoaded=false;
+
+// tabs
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  const v=b.dataset.v;
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['home','savings','plan','compare','history'].forEach(k=>$('v-'+k).classList.toggle('on',k===v));
+  $('title').textContent = {home:'Solar Stack',savings:'Savings',plan:'Charge plan',compare:'Compare tariffs',history:'History'}[v];
+  if(v==='savings') loadSavings();
+  if(v==='plan') loadForecast();
+  if(v==='compare') loadCompare();
+  if(v==='history') loadHistory();
+});
+
+async function tick(){
+  try{
+    const d=await (await fetch('/v1/sites/demo/live')).json();
+    if(!d.online){ $('status').textContent='⚠ offline'; return; }
+    const soc=d.soc??0;
+    $('socNum').textContent=Math.round(soc);
+    $('socArc').setAttribute('stroke-dasharray',(2*Math.PI*104*soc/100).toFixed(1)+' 654');
+    $('pv').textContent=n(d.pv_kw); $('bat').textContent=n(Math.abs(d.bat_kw));
+    $('grid').textContent=n(Math.abs(d.grid_kw)); $('load').textContent=n(d.load_kw);
+    $('today').textContent=(d.pv_today_kwh??0).toFixed(1); $('cap').textContent=(d.capacity_kwh??0).toFixed(1);
+    let s=[];
+    if(d.pv_kw>0.05) s.push('Generating <b>'+d.pv_kw.toFixed(2)+'kW</b>');
+    if(d.bat_kw<-0.05) s.push('charging the battery'); else if(d.bat_kw>0.05) s.push('running your home off the battery');
+    if(d.grid_kw<-0.05) s.push('exporting <b>'+Math.abs(d.grid_kw).toFixed(2)+'kW</b>'); else if(d.grid_kw>0.05) s.push('importing <b>'+d.grid_kw.toFixed(2)+'kW</b>');
+    $('status').innerHTML = s.length? s.join(' · '):'Idle';
+    $('why').textContent = whyText(d);
+    $('upd').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch(e){ $('status').textContent='⚠ connection error'; }
+}
+function whyText(d){
+  if(d.pv_kw>0.05 && d.bat_kw<-0.05) return 'Free solar is charging your battery for later.';
+  if(d.bat_kw>0.05 && d.grid_kw<0.06) return 'Powering your home from stored energy instead of buying it from the grid.';
+  if(d.grid_kw<-0.05) return 'Exporting surplus solar to the grid for credit.';
+  if(d.grid_kw>0.05) return 'Topping up from the grid — cheapest when rates are low.';
+  return 'Holding steady — your battery is covering the house.';
+}
+
+async function loadSavings(){
+  try{
+    const d=await (await fetch('/v1/sites/demo/savings')).json();
+    if(!d.online){ $('s-err').textContent='⚠ '+(d.error||'offline'); return; }
+    $('s-err').textContent='';
+    $('s-total').textContent=d.smart_total_gbp.toFixed(2);
+    $('s-yest').textContent=d.smart_yesterday_gbp.toFixed(2);
+    const c=d.cost_today_p;
+    $('s-today').innerHTML = c<0 ? '<span class="credit">+£'+(Math.abs(c)/100).toFixed(2)+'</span>' : '£'+(c/100).toFixed(2);
+    $('s-imp').textContent=d.import_rate_p.toFixed(1); $('s-exp').textContent=d.export_rate_p.toFixed(1);
+    $('s-pvbat').textContent=d.pvbat_total_gbp.toFixed(2);
+  }catch(e){ $('s-err').textContent='⚠ connection error'; }
+}
+
+async function loadHistory(){
+  try{
+    const d=await (await fetch('/v1/sites/demo/history?hours='+histHours)).json();
+    if(!d.online){ $('h-err').textContent='⚠ '+(d.error||'offline'); return; }
+    $('h-err').textContent=''; drawChart(d);
+  }catch(e){ $('h-err').textContent='⚠ connection error'; }
+}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));
+  histHours=+b.dataset.h; loadHistory();
+});
+function drawChart(d){
+  const cv=$('chart'), ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*devicePixelRatio, H=cv.height=240*devicePixelRatio, pad=8*devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  const soc=d.soc||[], pv=d.pv||[];
+  const all=[...soc,...pv]; if(!all.length){ ctx.fillStyle='#8b98a5'; ctx.font=(13*devicePixelRatio)+'px system-ui'; ctx.fillText('Collecting…',12*devicePixelRatio,28*devicePixelRatio); return; }
+  const ts=all.map(p=>Date.parse(p.t)); const t0=Math.min(...ts), t1=Math.max(...ts)||t0+1;
+  const maxPv=Math.max(1,...pv.map(p=>p.v))*1.1;
+  const x=t=>pad+(t-t0)/(t1-t0||1)*(W-2*pad);
+  const yS=v=>H-pad-(v/100)*(H-2*pad);
+  const yP=v=>H-pad-(v/maxPv)*(H-2*pad);
+  // pv area
+  if(pv.length){ ctx.beginPath(); pv.forEach((p,i)=>{const X=x(Date.parse(p.t)),Y=yP(p.v); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+    ctx.strokeStyle='#f26722'; ctx.lineWidth=2*devicePixelRatio; ctx.stroke();
+    ctx.lineTo(x(t1),H-pad); ctx.lineTo(x(t0),H-pad); ctx.closePath(); ctx.fillStyle='rgba(242,103,34,.14)'; ctx.fill(); }
+  // soc line
+  if(soc.length){ ctx.beginPath(); soc.forEach((p,i)=>{const X=x(Date.parse(p.t)),Y=yS(p.v); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+    ctx.strokeStyle='#00c4b4'; ctx.lineWidth=2.4*devicePixelRatio; ctx.stroke(); }
+}
+
+// ---- Plan / EV ----
+let fdata=null, evOn=true, evMode='full';
+function hhmm(iso){ if(!iso) return '–'; const d=new Date(iso); return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+$('ev-yes').onclick=()=>{evOn=true; $('ev-yes').classList.add('on'); $('ev-no').classList.remove('on'); renderPlan();};
+$('ev-no').onclick=()=>{evOn=false; $('ev-no').classList.add('on'); $('ev-yes').classList.remove('on'); renderPlan();};
+$('ev-full').onclick=()=>{evMode='full'; $('ev-full').classList.add('on'); $('ev-topup').classList.remove('on'); renderPlan();};
+$('ev-topup').onclick=()=>{evMode='topup'; $('ev-topup').classList.add('on'); $('ev-full').classList.remove('on'); renderPlan();};
+
+async function loadForecast(){
+  try{
+    fdata=await (await fetch('/v1/sites/demo/forecast')).json();
+    if(!fdata.online){ $('p-err').textContent='⚠ '+(fdata.error||'offline'); return; }
+    $('p-err').textContent=''; renderPlan();
+  }catch(e){ $('p-err').textContent='⚠ connection error'; }
+}
+function evWindow(){ return !fdata? null : (evMode==='full'? fdata.ev_full : fdata.ev_topup); }
+function renderPlan(){
+  if(!fdata) return;
+  const w=evWindow();
+  $('ev-block').style.display = evOn ? 'block' : 'none';
+  if(evOn && w){
+    $('ev-window').textContent = hhmm(w.start)+' – '+hhmm(w.end);
+    $('ev-avg').textContent = 'average '+w.avg.toFixed(1)+'p/kWh · cheapest window ahead';
+  }
+  const p=fdata.plan||{};
+  const pills=[];
+  if(p.charge_start) pills.push('🔋 Battery charges <b>'+p.charge_start.slice(0,5)+'</b>');
+  if(p.export_start) pills.push('⚡ Best export <b>'+p.export_start.slice(0,5)+'–'+(p.export_end||'').slice(0,5)+'</b>');
+  if(fdata.predicted_load_kwh) pills.push('🏠 Predicted use today <b>'+fdata.predicted_load_kwh+' kWh</b>');
+  $('planrow').innerHTML = pills.map(x=>'<span class="pill">'+x+'</span>').join('');
+  const acts={free:['⚡ Free — charge','a-free'],charge:['Charge','a-charge'],export:['Export','a-export'],cheap:['Cheap','a-cheap'],peak:['Peak — avoid','a-peak'],hold:['Hold','a-hold']};
+  $('slotlist').innerHTML = (fdata.slots||[]).map(s=>{
+    const a=acts[s.action]||['Hold','a-hold'];
+    return '<div class="slot"><span class="st">'+s.hm+'</span><span class="sp">'+s.p.toFixed(1)+'p/kWh</span><span class="sa '+a[1]+'">'+a[0]+'</span></div>';
+  }).join('');
+  drawForecast();
+}
+function drawForecast(){
+  const cv=$('fchart'), ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*devicePixelRatio, H=cv.height=200*devicePixelRatio, pad=8*devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  const s=fdata.series||[]; if(!s.length){ ctx.fillStyle='#8b98a5'; ctx.font=(13*devicePixelRatio)+'px system-ui'; ctx.fillText('No forward rates',12*devicePixelRatio,26*devicePixelRatio); return;}
+  const ts=s.map(p=>Date.parse(p.t)), t0=ts[0], t1=ts[ts.length-1]+30*60000;
+  const maxP=Math.max(...s.map(p=>p.p))*1.1, minP=Math.min(0,...s.map(p=>p.p));
+  const x=t=>pad+(t-t0)/(t1-t0)*(W-2*pad), y=v=>H-pad-((v-minP)/(maxP-minP))*(H-2*pad);
+  // EV window shade
+  const w=evWindow();
+  if(evOn && w){ const a=x(Date.parse(w.start)), b=x(Date.parse(w.end));
+    ctx.fillStyle='rgba(0,196,180,.16)'; ctx.fillRect(a,pad,b-a,H-2*pad);
+    ctx.strokeStyle='rgba(0,196,180,.5)'; ctx.lineWidth=1.5*devicePixelRatio; ctx.strokeRect(a,pad,b-a,H-2*pad); }
+  // rate line
+  ctx.beginPath(); s.forEach((p,i)=>{const X=x(Date.parse(p.t)),Y=y(p.p); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+  ctx.strokeStyle='#f26722'; ctx.lineWidth=2*devicePixelRatio; ctx.stroke();
+  ctx.lineTo(x(t1),H-pad); ctx.lineTo(x(t0),H-pad); ctx.closePath(); ctx.fillStyle='rgba(242,103,34,.10)'; ctx.fill();
+}
+
+// ---- Compare tariffs ----
+let cev=true;
+$('cev-yes').onclick=()=>{cev=true; $('cev-yes').classList.add('on'); $('cev-no').classList.remove('on'); loadCompare();};
+$('cev-no').onclick=()=>{cev=false; $('cev-no').classList.add('on'); $('cev-yes').classList.remove('on'); loadCompare();};
+async function loadCompare(){
+  try{
+    const d=await (await fetch('/v1/sites/demo/compare?ev='+(cev?1:0))).json();
+    if(!d.online){ $('c-err').textContent='⚠ '+(d.error||'offline'); return; }
+    $('c-err').textContent=''; renderCompare(d);
+  }catch(e){ $('c-err').textContent='⚠ connection error'; }
+}
+function renderCompare(d){
+  const t=d.tariffs||[]; if(!t.length){ $('c-list').innerHTML=''; return; }
+  const cheapest=t[0];
+  const rec=d.recommendation||{};
+  $('c-save').innerHTML = rec.save>0
+    ? '<span style="color:var(--orange)">£</span>'+rec.save+'<small style="font-size:15px;color:var(--dim)"> /yr</small>'
+    : '<span style="color:var(--teal)">✓ Stay put</span>';
+  $('c-best').textContent = rec.verdict || '';
+  $('c-list').innerHTML = t.map(x=>{
+    const isBest = x===cheapest;
+    const badge = x.current ? '<span class="badge you">You</span>' : (isBest?'<span class="badge best">Best</span>':'');
+    let saveHtml='';
+    if(!x.current && x.save!=null){
+      saveHtml = x.save>0 ? '<span class="save pos">save £'+x.save+'/yr</span>'
+               : x.save<0 ? '<span class="save neg">+£'+(-x.save)+'/yr</span>' : '';
+    }
+    return '<div class="tcard'+(isBest?' best':'')+(x.current?' cur':'')+'">'
+      +'<div class="nm"><b>'+(x.supplier||'')+' '+x.name+'</b> '+badge+'<div class="sm">avg '+x.blended+'p/kWh</div></div>'
+      +'<div class="amt">£'+x.annual+'<small style="font-size:11px;color:var(--dim)">/yr</small>'+saveHtml+'</div></div>';
+  }).join('');
+  $('c-note').textContent = d.note || '';
+}
+
+tick(); setInterval(tick, 8000);
+addEventListener('resize', ()=>{ if($('v-history').classList.contains('on')) loadHistory(); });
+</script>
+</body>
+</html>
